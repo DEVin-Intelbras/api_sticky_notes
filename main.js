@@ -4,10 +4,10 @@ const app = express()
 
 app.use(express.json())
 
-const tasks = []
+let tasks = []
 
 app.get('/', (request, response) => {
-    response.send("<h1 style='color:red'>ola mundo</h1")
+  response.send("<h1 style='color:red'>ola mundo</h1")
   // response.redirect("https://www.npmjs.com/package/nodemon")
 })
 
@@ -17,6 +17,7 @@ app.get('/tasks', (request, response) => {
 
 // BODY
 app.post('/tasks', (request, response) => {
+
   const task = {
     id: uuidv4(),
     title: request.body.title,
@@ -26,14 +27,27 @@ app.post('/tasks', (request, response) => {
     created_at: new Date().toLocaleDateString('pt-BR')
   }
 
-   tasks.push(task)
+  tasks.push(task)
 
-   response.status(201).json(task)
+  response.status(201).json(task)
 })
 
 
 app.delete('/tasks/:id', (request, response) => {
-  console.log(request.params)
+  const tasksFiltered = tasks.filter(task => task.id !== request.params.id)
+  tasks = [...tasksFiltered]
+  response.json()
+})
+
+
+app.get('/tasks/:id', (request, response) => {
+    const task = tasks.find(task => task.id === request.params.id)
+
+    if(!task) {
+      return response.status(404).json({error: 'Desculpe, esse item não foi encontrado!'})
+    }
+    
+    response.json(task)
 })
 
 
