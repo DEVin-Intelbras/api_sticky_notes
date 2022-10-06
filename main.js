@@ -15,7 +15,16 @@ app.get('/', (request, response) => {
 })
 
 app.get('/tasks', (request, response) => {
-  response.json(tasks)
+    const titleQuery = request.query.title || ""  
+    const descriptionQuery = request.query.description || ""  
+    
+    const tasksSearch = tasks.filter(
+      task => 
+      task.title.toUpperCase().includes(titleQuery.toUpperCase())
+      && task.description.toUpperCase().includes(descriptionQuery.toUpperCase())
+      )
+
+    return response.json(tasksSearch)
 })
 
 // BODY
