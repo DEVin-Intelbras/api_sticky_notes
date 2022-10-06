@@ -1,8 +1,11 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid');
+const cors = require('cors')
+
 const app = express()
 
 app.use(express.json())
+app.use(cors())
 
 let tasks = []
 
@@ -46,10 +49,54 @@ app.get('/tasks/:id', (request, response) => {
     if(!task) {
       return response.status(404).json({error: 'Desculpe, esse item não foi encontrado!'})
     }
-    
+
     response.json(task)
 })
 
+app.put('/tasks/:id', (request, response) => {
+
+  const task = tasks.find(task => task.id === request.params.id)
+
+  if(!task) {
+    return response.status(404).json({error: 'Desculpe, não encontramos essa tarefa.'})
+  }
+
+  if(task.status === true) {
+    return response.status(401).json({error: 'Não é permitido atualizar essa tarefa, pois ela já encontra finalizada.'})
+  }
+
+  const newTasks = tasks.map(task => {
+    if(task.id === request.params.id) {
+      task.title = request.body.title
+      task.description = request.body.description
+      task.limit_date = request.body.limit_date
+    }
+    return task
+  })
+
+  tasks = [...newTasks]
+
+  response.json()
+})
+
+app.patch('/tasks/:id/active', (request, response) => {
+  const task = tasks.find(task => task.id === request.params.id)
+
+  if(!task) {
+    return response.status(404).json({error: 'Desculpe, não encontramos essa tarefa.'})
+  }
+
+  const newTasks = tasks.map(task => {
+    if(task.id === request.params.id) {
+      task.status = true
+    }
+    return task
+  })
+
+  tasks = [...newTasks]
+
+  response.json()
+})
 
 app.listen(3333, () => {
   console.log('Servidor Online')
