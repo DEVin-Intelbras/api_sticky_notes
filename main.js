@@ -1,6 +1,7 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors')
+const yup = require('yup')
 
 const app = express()
 
@@ -15,33 +16,55 @@ app.get('/', (request, response) => {
 })
 
 app.get('/tasks', (request, response) => {
-    const titleQuery = request.query.title || ""  
-    const descriptionQuery = request.query.description || ""  
-    
-    const tasksSearch = tasks.filter(
-      task => 
+  const titleQuery = request.query.title || ""
+  const descriptionQuery = request.query.description || ""
+
+  const tasksSearch = tasks.filter(
+    task =>
       task.title.toUpperCase().includes(titleQuery.toUpperCase())
       && task.description.toUpperCase().includes(descriptionQuery.toUpperCase())
-      )
+  )
 
-    return response.json(tasksSearch)
+  return response.json(tasksSearch)
 })
 
 // BODY
-app.post('/tasks', (request, response) => {
+app.post('/tasks', async (request, response) => {
+  try {
+    const schema = yup.object().shape({
+      title:
+        yup
+          .string()
+          .min(5, "Título deve conter no mínimo 5 caracteres")
+          .max(100)
+          .required("Título é obrigatório"),
+      description:
+        yup
+          .string()
+          .min(10)
+          .max(250)
+          .required("Descrição é obrigatória"),
+      limit_date: yup
+        .string()
+    })
 
-  const task = {
-    id: uuidv4(),
-    title: request.body.title,
-    description: request.body.description,
-    limit_date: request.body.limit_date,
-    status: false,
-    created_at: new Date().toLocaleDateString('pt-BR')
+    await schema.validate(request.body)
+
+    const task = {
+      id: uuidv4(),
+      title: request.body.title,
+      description: request.body.description,
+      limit_date: request.body.limit_date,
+      status: false,
+      created_at: new Date().toLocaleDateString('pt-BR')
+    }
+
+    tasks.push(task)
+
+    response.status(201).json(task)
+  } catch (error) {
+    response.status(400).json({error: error.message})
   }
-
-  tasks.push(task)
-
-  response.status(201).json(task)
 })
 
 
@@ -53,29 +76,29 @@ app.delete('/tasks/:id', (request, response) => {
 
 
 app.get('/tasks/:id', (request, response) => {
-    const task = tasks.find(task => task.id === request.params.id)
+  const task = tasks.find(task => task.id === request.params.id)
 
-    if(!task) {
-      return response.status(404).json({error: 'Desculpe, esse item não foi encontrado!'})
-    }
+  if (!task) {
+    return response.status(404).json({ error: 'Desculpe, esse item não foi encontrado!' })
+  }
 
-    response.json(task)
+  response.json(task)
 })
 
 app.put('/tasks/:id', (request, response) => {
 
   const task = tasks.find(task => task.id === request.params.id)
 
-  if(!task) {
-    return response.status(404).json({error: 'Desculpe, não encontramos essa tarefa.'})
+  if (!task) {
+    return response.status(404).json({ error: 'Desculpe, não encontramos essa tarefa.' })
   }
 
-  if(task.status === true) {
-    return response.status(401).json({error: 'Não é permitido atualizar essa tarefa, pois ela já encontra finalizada.'})
+  if (task.status === true) {
+    return response.status(401).json({ error: 'Não é permitido atualizar essa tarefa, pois ela já encontra finalizada.' })
   }
 
   const newTasks = tasks.map(task => {
-    if(task.id === request.params.id) {
+    if (task.id === request.params.id) {
       task.title = request.body.title
       task.description = request.body.description
       task.limit_date = request.body.limit_date
@@ -91,12 +114,12 @@ app.put('/tasks/:id', (request, response) => {
 app.patch('/tasks/:id/active', (request, response) => {
   const task = tasks.find(task => task.id === request.params.id)
 
-  if(!task) {
-    return response.status(404).json({error: 'Desculpe, não encontramos essa tarefa.'})
+  if (!task) {
+    return response.status(404).json({ error: 'Desculpe, não encontramos essa tarefa.' })
   }
 
   const newTasks = tasks.map(task => {
-    if(task.id === request.params.id) {
+    if (task.id === request.params.id) {
       task.status = true
     }
     return task
