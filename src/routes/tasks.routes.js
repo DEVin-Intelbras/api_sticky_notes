@@ -1,35 +1,20 @@
-const express = require('express')
-const { v4: uuidv4 } = require('uuid');
-const cors = require('cors')
-const yup = require('yup')
+import { Router } from "express";
+import { v4 as uuidv4 } from 'uuid'
+import * as yup from 'yup'
 
-const app = express()
+import {
+  findAll
+} from '../controllers/task.controller.js'
 
-app.use(express.json())
-app.use(cors())
+const tasksRoutes = Router()
 
 let tasks = []
 
-app.get('/', (request, response) => {
-  response.send("<h1 style='color:red'>ola mundo</h1")
-  // response.redirect("https://www.npmjs.com/package/nodemon")
-})
+tasksRoutes.get('/tasks', findAll)
 
-app.get('/tasks', (request, response) => {
-  const titleQuery = request.query.title || ""
-  const descriptionQuery = request.query.description || ""
-
-  const tasksSearch = tasks.filter(
-    task =>
-      task.title.toUpperCase().includes(titleQuery.toUpperCase())
-      && task.description.toUpperCase().includes(descriptionQuery.toUpperCase())
-  )
-
-  return response.json(tasksSearch)
-})
 
 // BODY
-app.post('/tasks', async (request, response) => {
+tasksRoutes.post('/tasks', async (request, response) => {
   try {
     const schema = yup.object().shape({
       title:
@@ -63,19 +48,19 @@ app.post('/tasks', async (request, response) => {
 
     response.status(201).json(task)
   } catch (error) {
-    response.status(400).json({error: error.message})
+    response.status(400).json({ error: error.message })
   }
 })
 
 
-app.delete('/tasks/:id', (request, response) => {
+tasksRoutes.delete('/tasks/:id', (request, response) => {
   const tasksFiltered = tasks.filter(task => task.id !== request.params.id)
   tasks = [...tasksFiltered]
   response.json()
 })
 
 
-app.get('/tasks/:id', (request, response) => {
+tasksRoutes.get('/tasks/:id', (request, response) => {
   const task = tasks.find(task => task.id === request.params.id)
 
   if (!task) {
@@ -85,7 +70,7 @@ app.get('/tasks/:id', (request, response) => {
   response.json(task)
 })
 
-app.put('/tasks/:id', (request, response) => {
+tasksRoutes.put('/tasks/:id', (request, response) => {
 
   const task = tasks.find(task => task.id === request.params.id)
 
@@ -111,7 +96,7 @@ app.put('/tasks/:id', (request, response) => {
   response.json()
 })
 
-app.patch('/tasks/:id/active', (request, response) => {
+tasksRoutes.patch('/tasks/:id/active', (request, response) => {
   const task = tasks.find(task => task.id === request.params.id)
 
   if (!task) {
@@ -130,6 +115,8 @@ app.patch('/tasks/:id/active', (request, response) => {
   response.json()
 })
 
-app.listen(3333, () => {
-  console.log('Servidor Online')
-})
+
+export default tasksRoutes
+
+
+

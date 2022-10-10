@@ -2,9 +2,10 @@
   "name": "projeto_2_backend",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "src/index.js",
+  "type": "module",
   "scripts": {
-    "servidor": "nodemon main.js"
+    "servidor": "nodemon src/index.js"
   },
   "keywords": [],
   "author": "",
